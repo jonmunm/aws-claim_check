@@ -1,0 +1,40 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+
+Parameters:
+  DeploymentId:
+    Type: String
+
+Resources:
+  StorageStack:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: stacks/storage.yaml
+      Parameters:
+        DeploymentId: !Ref DeploymentId
+
+  StreamStack:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: stacks/streams.yaml
+      Parameters:
+        DeploymentId: !Ref DeploymentId
+        LandingBucketName: !GetAtt StorageStack.Outputs.LandingBucketName
+
+  ComputeStack:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: stacks/compute.yaml
+      Parameters:
+        DeploymentId: !Ref DeploymentId
+        ClaimCheckQueueArn: !GetAtt StreamStack.Outputs.ClaimCheckQueueArn
+        LandingBucketName: !GetAtt StorageStack.Outputs.LandingBucketName
+
+  MonitoringStack:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: stacks/monitoring.yaml
+      Parameters:
+        DeploymentId: !Ref DeploymentId
+        ConsumerFunctionName: !GetAtt ComputeStack.Outputs.ConsumerFunctionName
+        QueueName: !GetAtt StreamStack.Outputs.ClaimCheckQueueName

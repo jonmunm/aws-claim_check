@@ -1,0 +1,57 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+
+Parameters:
+  DeploymentId:
+    Type: String
+  LandingBucketName:
+    Type: String
+
+Resources:
+  ClaimCheckQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub "claim-check-queue-${DeploymentId}"
+      VisibilityTimeout: 600
+
+  S3ToSQSRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Name: !Sub "s3-landing-rule-${DeploymentId}"
+      EventBusName: "default"
+      State: "ENABLED"
+      EventPattern:
+        source:
+          - "aws.s3"
+        detail-type:
+          - "Object Created"
+        detail:
+          bucket:
+            name:
+              - !Ref LandingBucketName
+      Targets:
+        - Arn: !GetAtt ClaimCheckQueue.Arn
+          Id: "ClaimCheckTarget"
+
+  ClaimCheckQueuePolicy:
+    Type: AWS::SQS::QueuePolicy
+    Properties:
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: "events.amazonaws.com"
+            Action: "sqs:SendMessage"
+            Resource: !GetAtt ClaimCheckQueue.Arn
+            Condition:
+              ArnEquals:
+                aws:SourceArn: !GetAtt S3ToSQSRule.Arn
+      Queues:
+        - !Ref ClaimCheckQueue
+
+Outputs:
+  ClaimCheckQueueName:
+    Value: !GetAtt ClaimCheckQueue.QueueName
+  ClaimCheckQueueArn:
+    Value: !GetAtt ClaimCheckQueue.Arn

@@ -1,0 +1,5 @@
+.aws-sam
+.vscode
+samconfig.toml
+# Ignora eventos de prueba locales si contienen data sensible
+events/

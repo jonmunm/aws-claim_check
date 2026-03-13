@@ -1,0 +1,225 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+
+Parameters:
+  DeploymentId:
+    Type: String
+  ConsumerFunctionName:
+    Type: String
+  QueueName:
+    Type: String
+
+Resources:
+  CloudWatchDashboard:
+    Type: AWS::CloudWatch::Dashboard
+    Properties:
+      DashboardName: !Sub "ClaimCheck-${DeploymentId}"
+      DashboardBody: !Sub |
+        {
+          "widgets": [
+              {
+                  "type": "text",
+                  "x": 0,
+                  "y": 7,
+                  "width": 16,
+                  "height": 1,
+                  "properties": {
+                      "markdown": "# SQS and EventBridge"
+                  }
+              },
+              {
+                  "type": "metric",
+                  "x": 0,
+                  "y": 8,
+                  "width": 8,
+                  "height": 6,
+                  "properties": {
+                      "metrics": [
+                          [ "AWS/SQS", "ApproximateNumberOfMessagesVisible", "QueueName", "${QueueName}", { "region": "${AWS::Region}" } ],
+                          [ ".", "NumberOfMessagesReceived", ".", ".", { "region": "${AWS::Region}" } ],
+                          [ ".", "NumberOfMessagesSent", ".", ".", { "region": "${AWS::Region}" } ]
+                      ],
+                      "view": "timeSeries",
+                      "stacked": false,
+                      "region": "${AWS::Region}",
+                      "period": 300,
+                      "stat": "Sum",
+                      "legend": {
+                          "position": "bottom"
+                      },
+                      "title": "",
+                      "yAxis": {
+                          "left": {
+                              "showUnits": false
+                          }
+                      }
+                  }
+              },
+              {
+                  "type": "text",
+                  "x": 16,
+                  "y": 7,
+                  "width": 8,
+                  "height": 1,
+                  "properties": {
+                      "markdown": "# Custom Metrics"
+                  }
+              },
+              {
+                  "type": "metric",
+                  "x": 8,
+                  "y": 8,
+                  "width": 8,
+                  "height": 6,
+                  "properties": {
+                      "metrics": [
+                          [ "AWS/Events", "MatchedEvents", "Source", "aws.s3", { "region": "${AWS::Region}" } ]
+                      ],
+                      "view": "timeSeries",
+                      "stacked": false,
+                      "region": "${AWS::Region}",
+                      "period": 300,
+                      "stat": "Sum",
+                      "legend": {
+                          "position": "bottom"
+                      },
+                      "title": "",
+                      "yAxis": {
+                          "left": {
+                              "showUnits": false,
+                              "min": 0
+                          }
+                      }
+                  }
+              },
+              {
+                  "type": "text",
+                  "x": 0,
+                  "y": 0,
+                  "width": 16,
+                  "height": 1,
+                  "properties": {
+                      "markdown": "# Function"
+                  }
+              },
+              {
+                  "type": "metric",
+                  "x": 0,
+                  "y": 1,
+                  "width": 8,
+                  "height": 6,
+                  "properties": {
+                      "metrics": [
+                          [ "AWS/Lambda", "Errors", "FunctionName", "${ConsumerFunctionName}", { "region": "${AWS::Region}" } ],
+                          [ ".", "Invocations", ".", ".", { "region": "${AWS::Region}" } ],
+                          [ ".", "Throttles", ".", ".", { "region": "${AWS::Region}" } ]
+                      ],
+                      "view": "timeSeries",
+                      "stacked": false,
+                      "region": "${AWS::Region}",
+                      "period": 300,
+                      "stat": "Sum",
+                      "legend": {
+                          "position": "bottom"
+                      },
+                      "title": "",
+                      "yAxis": {
+                          "left": {
+                              "showUnits": false
+                          }
+                      }
+                  }
+              },
+              {
+                  "type": "metric",
+                  "x": 8,
+                  "y": 1,
+                  "width": 8,
+                  "height": 6,
+                  "properties": {
+                      "metrics": [
+                          [ "AWS/Lambda", "Duration", "FunctionName", "consumer-function-${DeploymentId}", { "region": "${AWS::Region}" } ]
+                      ],
+                      "view": "timeSeries",
+                      "stacked": false,
+                      "region": "${AWS::Region}",
+                      "period": 300,
+                      "stat": "Average",
+                      "legend": {
+                          "position": "bottom"
+                      },
+                      "title": "",
+                      "yAxis": {
+                          "left": {
+                              "showUnits": false,
+                              "min": 0
+                          }
+                      }
+                  }
+              },
+              {
+                  "type": "metric",
+                  "x": 16,
+                  "y": 1,
+                  "width": 8,
+                  "height": 6,
+                  "properties": {
+                      "metrics": [
+                          [ "Claim Check", "ROWS", "Type", "Consumed", { "region": "${AWS::Region}" } ]
+                      ],
+                      "view": "timeSeries",
+                      "stacked": false,
+                      "region": "${AWS::Region}",
+                      "period": 300,
+                      "stat": "Sum",
+                      "legend": {
+                          "position": "hidden"
+                      },
+                      "title": "",
+                      "yAxis": {
+                          "left": {
+                              "showUnits": false,
+                              "min": 0
+                          }
+                      }
+                  }
+              },
+              {
+                  "type": "text",
+                  "x": 16,
+                  "y": 0,
+                  "width": 8,
+                  "height": 1,
+                  "properties": {
+                      "markdown": "# Custom Metrics"
+                  }
+              },
+              {
+                  "type": "metric",
+                  "x": 16,
+                  "y": 8,
+                  "width": 8,
+                  "height": 6,
+                  "properties": {
+                      "metrics": [
+                          [ "Claim Check", "SIZE", "Type", "Consumed", { "region": "${AWS::Region}" } ]
+                      ],
+                      "view": "timeSeries",
+                      "stacked": false,
+                      "region": "${AWS::Region}",
+                      "period": 300,
+                      "stat": "Sum",
+                      "legend": {
+                          "position": "hidden"
+                      },
+                      "title": "",
+                      "yAxis": {
+                          "left": {
+                              "showUnits": false,
+                              "min": 0
+                          }
+                      }
+                  }
+              }
+          ]
+        }
