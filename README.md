@@ -16,7 +16,7 @@ The infrastructure is managed via **AWS SAM (Serverless Application Model)** and
 ---
 
 ## 🏗 Technical Architecture
-1. **Producer:** Uploads large files to the S3 Bucket and sends a small JSON message to the SQS Queue containing the S3 Object Key. Files are uploaded using the [AWS S3 Uploader](https://github.com/jonmunm/aws-s3_uploader/).
+1. **Producer:** Uploads large files to the S3 Bucket and sends a small JSON message to the SQS Queue containing the S3 Object Key.
 2. **Messaging:** SQS triggers the AWS Lambda function automatically upon receiving the claim message.
 3. **Consumer (Lambda):** Retrieves the S3 Key from the message, downloads the full payload from S3, and executes the business logic. It then publishes custom metrics to CloudWatch.
 
@@ -33,7 +33,7 @@ The infrastructure is managed via **AWS SAM (Serverless Application Model)** and
 
 ### 2. Clone the Repository
 ```bash
-git clone [https://github.com/jonmunm/aws-claim_check.git](https://github.com/jonmunm/aws-claim_check.git)
+git clone https://github.com/jonmunm/aws-claim_check.git
 cd aws-claim_check
 ```
 
